@@ -20,6 +20,7 @@
 */
 package com.extendedclip.papi.expansion.vault;
 
+import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.permission.Permission;
 
@@ -46,8 +47,8 @@ public class VaultPermsHook implements VaultHook {
 		return perms != null && chat != null;
 	}
 
-@Override
-public String onPlaceholderRequest(Player p, String identifier) {
+	@Override
+	public String onPlaceholderRequest(Player p, String identifier) {
 	if (identifier.startsWith("rankprefix_")) {
 		int i = 1;
 		try {
@@ -81,6 +82,12 @@ public String onPlaceholderRequest(Player p, String identifier) {
 			return "provide a number dipshit";
 		}
 		return getGroupSuffix(p, i);
+	}
+	else if(identifier.startsWith("hasgroup_")){
+		return perms.playerInGroup(p, identifier.split("hasgroup_")[1]) ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
+	}
+	else if(identifier.startsWith("inprimarygroup_")){
+		return perms.getPrimaryGroup(p).equals(identifier.split("inprimarygroup_")[1]) ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
 	}
 	switch (identifier) {
 	case "group":
