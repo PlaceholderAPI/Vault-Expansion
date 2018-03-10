@@ -20,6 +20,7 @@
 */
 package com.extendedclip.papi.expansion.vault;
 
+import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.permission.Permission;
 
@@ -83,10 +84,10 @@ public class VaultPermsHook implements VaultHook {
 		return getGroupSuffix(p, i);
 	}
 	else if(identifier.startsWith("hasgroup_")){
-		return perms.playerInGroup(p, identifier.split("hasgroup_")[1]) ? "true" : "false";
+		return perms.playerInGroup(p, identifier.split("hasgroup_")[1]) ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
 	}
 	else if(identifier.startsWith("inprimarygroup_")){
-		return perms.getPrimaryGroup(p).equals(identifier.split("inprimarygroup_")[1]) ? "true" : "false";
+		return perms.getPrimaryGroup(p).equals(identifier.split("inprimarygroup_")[1]) ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
 	}
 	switch (identifier) {
 	case "group":
