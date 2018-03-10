@@ -46,8 +46,8 @@ public class VaultPermsHook implements VaultHook {
 		return perms != null && chat != null;
 	}
 
-@Override
-public String onPlaceholderRequest(Player p, String identifier) {
+	@Override
+	public String onPlaceholderRequest(Player p, String identifier) {
 	if (identifier.startsWith("rankprefix_")) {
 		int i = 1;
 		try {
@@ -81,6 +81,12 @@ public String onPlaceholderRequest(Player p, String identifier) {
 			return "provide a number dipshit";
 		}
 		return getGroupSuffix(p, i);
+	}
+	else if(identifier.startsWith("hasgroup_")){
+		return perms.playerInGroup(p, identifier.split("hasgroup_")[1]) ? "true" : "false";
+	}
+	else if(identifier.startsWith("inprimarygroup_")){
+		return perms.getPrimaryGroup(p).equals(identifier.split("inprimarygroup_")[1]) ? "true" : "false";
 	}
 	switch (identifier) {
 	case "group":
