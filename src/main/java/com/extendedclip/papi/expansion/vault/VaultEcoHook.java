@@ -20,6 +20,7 @@
  */
 package com.extendedclip.papi.expansion.vault;
 
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 import net.milkbowl.vault.economy.Economy;
@@ -32,6 +33,8 @@ public class VaultEcoHook implements VaultHook {
   private Economy econ = null;
 
   private String k, m, b, t, q;
+
+  private DecimalFormat format = new DecimalFormat("#,###");
 
   public VaultEcoHook(VaultExpansion ex) {
     k = ex.getString("formatting.thousands", "k");
@@ -65,6 +68,8 @@ public class VaultEcoHook implements VaultHook {
       return toLong(getBalance(p));
     } else if (identifier.equals("balance_formatted")) {
       return fixMoney(getBalance(p));
+    } else if (identifier.equals("balance_commas")) {
+      return format.format(getBalance(p));
     }
     return null;
   }
