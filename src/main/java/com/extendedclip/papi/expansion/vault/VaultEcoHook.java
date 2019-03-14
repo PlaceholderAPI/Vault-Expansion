@@ -22,11 +22,14 @@ package com.extendedclip.papi.expansion.vault;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Locale;
+import java.util.*;
+
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
+
+import static java.util.stream.Collectors.toMap;
 
 public class VaultEcoHook implements VaultHook {
 
@@ -47,7 +50,7 @@ public class VaultEcoHook implements VaultHook {
   @Override
   public boolean setup() {
     RegisteredServiceProvider<Economy> rsp = Bukkit.getServer().getServicesManager()
-        .getRegistration(Economy.class);
+            .getRegistration(Economy.class);
 
     if (rsp == null) {
       return false;
@@ -70,6 +73,18 @@ public class VaultEcoHook implements VaultHook {
       return fixMoney(getBalance(p));
     } else if (identifier.equals("balance_commas")) {
       return format.format(getBalance(p));
+    } else if (identifier.startsWith("top_balance_fixed_")) {
+      int rank = Integer.parseInt(identifier.split("top_balance_fixed_")[1]);
+      return toLong(Double.parseDouble(getTop("bal", rank)));
+    } else if (identifier.startsWith("top_balance_formatted_")) {
+      int rank = Integer.parseInt(identifier.split("top_balance_formatted_")[1]);
+      return fixMoney(Double.parseDouble(getTop("bal", rank)));
+    } else if (identifier.startsWith("top_balance_")) {
+      int rank = Integer.parseInt(identifier.split("top_balance_")[1]);
+      return getTop("bal", rank);
+    } else if (identifier.startsWith("top_player_")) {
+      int rank = Integer.parseInt(identifier.split("top_player_")[1]);
+      return getTop("player", rank);
     }
     return null;
   }
@@ -115,5 +130,24 @@ public class VaultEcoHook implements VaultHook {
       return econ.getBalance(p);
     }
     return 0;
+  }
+
+  private String getTop(String balOrPlayer, int rank) {
+    Map<String, Double> top = new LinkedHashMap<>();
+    for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+      top.put(player.getName(), econ.getBalance(player));
+    }
+    Map<String, Double> sorted = top.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
+    List players = new ArrayList(sorted.keySet());
+    List balances = new ArrayList(sorted.values());
+    if (rank <= balances.size()) {
+      if (balOrPlayer.equalsIgnoreCase("bal")) {
+        return String.valueOf(balances.get(rank - 1));
+      } else if (balOrPlayer.equals("player")) {
+        return String.valueOf(players.get(rank - 1));
+      }
+    }
+    return "0";
   }
 }
