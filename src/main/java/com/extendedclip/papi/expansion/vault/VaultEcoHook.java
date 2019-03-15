@@ -79,6 +79,9 @@ public class VaultEcoHook implements VaultHook {
     } else if (identifier.startsWith("top_balance_formatted_")) {
       int rank = Integer.parseInt(identifier.split("top_balance_formatted_")[1]);
       return fixMoney(Double.parseDouble(getTop("bal", rank)));
+    } else if (identifier.startsWith("top_balance_commas")) {
+      int rank = Integer.parseInt(identifier.split("top_balance_commas_")[1]);
+      return format.format(Double.parseDouble(getTop("bal", rank)));
     } else if (identifier.startsWith("top_balance_")) {
       int rank = Integer.parseInt(identifier.split("top_balance_")[1]);
       return getTop("bal", rank);
