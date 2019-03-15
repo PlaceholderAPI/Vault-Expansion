@@ -73,6 +73,8 @@ public class VaultEcoHook implements VaultHook {
       return fixMoney(getBalance(p));
     } else if (identifier.equals("balance_commas")) {
       return format.format(getBalance(p));
+    } else if (identifier.equals("top_rank")) {
+        return getTop(p.getPlayer().getName(), 1);
     } else if (identifier.startsWith("top_balance_fixed_")) {
       int rank = Integer.parseInt(identifier.split("top_balance_fixed_")[1]);
       return toLong(Double.parseDouble(getTop("bal", rank)));
@@ -150,6 +152,9 @@ public class VaultEcoHook implements VaultHook {
       } else if (balOrPlayer.equals("player")) {
         return String.valueOf(players.get(rank - 1));
       }
+    }
+    if (!balOrPlayer.equals("bal") && !balOrPlayer.equals("player"))  {
+        return String.valueOf(players.indexOf(balOrPlayer) + 1);
     }
     return "0";
   }
