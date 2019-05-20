@@ -23,6 +23,7 @@ package com.extendedclip.papi.expansion.vault;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.permission.Permission;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -98,6 +99,9 @@ public class VaultPermsHook implements VaultHook {
       case "group":
       case "rank":
         return getMainGroup(p) != null ? getMainGroup(p) : "";
+      case "group_capital":
+      case "rank_capital":
+        return getMainGroup(p) != null ? StringUtils.capitalize(getMainGroup(p).toLowerCase()) : "";
       case "prefix":
         return getPlayerPrefix(p) != null ? getPlayerPrefix(p) : "";
       case "groupprefix":
