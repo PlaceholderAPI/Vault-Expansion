@@ -166,7 +166,9 @@ public class VaultEcoHook implements VaultHook {
   private String getTop(String balOrPlayer, int rank) {
     Map<String, Double> top = new LinkedHashMap<>();
     for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-      top.put(player.getName(), econ.getBalance(player));
+      if (player != null) {
+        top.put(player.getName(), econ.getBalance(player));
+      }
     }
     Map<String, Double> sorted = top.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
             .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
