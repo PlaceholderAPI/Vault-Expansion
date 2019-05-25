@@ -64,10 +64,6 @@ public class VaultEcoHook implements VaultHook {
 
   @Override
   public String onPlaceholderRequest(OfflinePlayer p, String identifier) {
-    if (p == null) {
-      return "";
-    }
-
     if (identifier.startsWith("top_balance_fixed_")) {
       String[] args = identifier.split("top_balance_fixed_");
       if (args.length > 1) {
