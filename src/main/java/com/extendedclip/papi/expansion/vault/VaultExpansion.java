@@ -98,6 +98,9 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
 
   @Override
   public String onRequest(OfflinePlayer p, String i) {
+    if (p == null) {
+      return null;
+    }
     if (i.startsWith("eco_") && eco != null) {
       return eco.onPlaceholderRequest(p, i.replace("eco_", ""));
     }
