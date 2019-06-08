@@ -115,7 +115,9 @@ public class VaultEcoHook implements VaultHook {
       case "balance_commas":
         return format.format(getBalance(p));
       case "top_rank":
-        return getTop(p.getPlayer().getName(), 1);
+        return getTop(p.getName(), 1);
+      case "rank_position":
+        return getTop(p.getName(), =1);
     }
     return null;
   }
@@ -172,6 +174,17 @@ public class VaultEcoHook implements VaultHook {
     }
     Map<String, Double> sorted = top.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
             .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
+    if (rank == -1) {
+      int i = 1;
+      
+      for (String name : sorted.keySet()) {
+        if (name.equals(balOrPlayer)) {
+          break;
+        }
+        i++;
+      }
+      return String.valueOf(i);
+    }
     Object[] players = sorted.keySet().toArray();
     Object[] balances = sorted.values().toArray();
     if (rank >= 1 && rank <= balances.length) {
