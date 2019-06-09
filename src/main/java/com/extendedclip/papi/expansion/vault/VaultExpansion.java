@@ -22,9 +22,11 @@ package com.extendedclip.papi.expansion.vault;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import me.clip.placeholderapi.expansion.Cacheable;
 import me.clip.placeholderapi.expansion.Configurable;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -98,11 +100,16 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
 
   @Override
   public String onRequest(OfflinePlayer p, String i) {
+    if (i.matches("^player_\\w{3,16}_") {
+      int j = i.indexOf("_", 7);
+      p = Bukkit.getOfflinePlayer(i.substring(7, j));
+      i = i.substring(j+1);
+    }
     if (p == null) {
-      return null
+      return null;
     }
     if (i.startsWith("eco_") && eco != null) {
-      return eco.onPlaceholderRequest(p, i.replace("eco_", ""));
+      return eco.onPlaceholderRequest(p, i.substring(4));
     }
     if (perms != null) {
       return perms.onPlaceholderRequest(p, i);
