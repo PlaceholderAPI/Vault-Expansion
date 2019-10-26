@@ -26,7 +26,6 @@ import java.util.*;
 
 import net.milkbowl.vault.economy.Economy;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -41,7 +40,7 @@ public class VaultEcoHook implements VaultHook {
 
   private DecimalFormat format = new DecimalFormat("#,###");
 
-  public VaultEcoHook(VaultExpansion ex) {
+  VaultEcoHook(VaultExpansion ex) {
     k = ex.getString("formatting.thousands", "k");
     m = ex.getString("formatting.millions", "m");
     b = ex.getString("formatting.billions", "b");
@@ -70,38 +69,46 @@ public class VaultEcoHook implements VaultHook {
 
     if (identifier.startsWith("top_balance_fixed_")) {
       String[] args = identifier.split("top_balance_fixed_");
-      if (args.length > 1) {
-        int rank = NumberUtils.isNumber(args[1]) ? Integer.parseInt(args[1]) : 0;
-        return toLong(Double.parseDouble(getTop("bal", rank)));
-      }
+
+      if (args.length > 1)
+        return toLong(getTopBalance(getInt(args[1])));
+
       return "0";
-    } else if (identifier.startsWith("top_balance_formatted_")) {
+    }
+
+    if (identifier.startsWith("top_balance_formatted_")) {
       String[] args = identifier.split("top_balance_formatted_");
-      if (args.length > 1) {
-        int rank = NumberUtils.isNumber(args[1]) ? Integer.parseInt(args[1]) : 0;
-        return fixMoney(Double.parseDouble(getTop("bal", rank)));
-      }
+
+      if (args.length > 1)
+        return fixMoney(getTopBalance(getInt(args[1])));
+
       return "0";
-    } else if (identifier.startsWith("top_balance_commas")) {
+    }
+
+    if (identifier.startsWith("top_balance_commas")) {
       String[] args = identifier.split("top_balance_commas_");
-      if (args.length > 1) {
-        int rank = NumberUtils.isNumber(args[1]) ? Integer.parseInt(args[1]) : 0;
-        return format.format(Double.parseDouble(getTop("bal", rank)));
-      }
+
+      if (args.length > 1)
+        return format.format(getTopBalance(getInt(args[1])));
+
       return "0";
-    } else if (identifier.startsWith("top_balance_")) {
+    }
+
+    if (identifier.startsWith("top_balance_")) {
       String[] args = identifier.split("top_balance_");
-      if (args.length > 1) {
-        int rank = NumberUtils.isNumber(args[1]) ? Integer.parseInt(args[1]) : 0;
-        return getTop("bal", rank);
-      }
+
+      if (args.length > 1)
+        return String.valueOf(getTopBalance(getInt(args[1])));
+
       return "0";
-    } else if (identifier.startsWith("top_player_")) {
+    }
+
+    if (identifier.startsWith("top_player_")) {
       String[] args = identifier.split("top_player_");
-      if (args.length > 1) {
-        int rank = NumberUtils.isNumber(args[1]) ? Integer.parseInt(args[1]) : 0;
-        return getTop("player", rank);
-      }
+
+      if (args.length > 1)
+        return getTopPlayer(getInt(args[1]));
+
       return "";
     }
 
@@ -115,7 +122,7 @@ public class VaultEcoHook implements VaultHook {
       case "balance_commas":
         return format.format(getBalance(p));
       case "top_rank":
-        return getTop(p.getPlayer().getName(), 1);
+        return getRank(p.getName());
     }
     return null;
   }
@@ -163,26 +170,49 @@ public class VaultEcoHook implements VaultHook {
     return 0;
   }
 
-  private String getTop(String balOrPlayer, int rank) {
+  private Map<String, Double> getTopPlayers() {
     Map<String, Double> top = new LinkedHashMap<>();
+
     for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-      if (player != null && player.getName() != null)
+        if (player == null || player.getName() == null)
+            continue;
+
         top.put(player.getName(), econ.getBalance(player));
     }
-    Map<String, Double> sorted = top.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
-    Object[] players = sorted.keySet().toArray();
-    Object[] balances = sorted.values().toArray();
-    if (rank >= 1 && rank <= balances.length) {
-      if (balOrPlayer.equalsIgnoreCase("bal")) {
-        return String.valueOf(balances[rank - 1]);
-      } else if (balOrPlayer.equals("player")) {
-        return String.valueOf(players[rank - 1]);
+
+    return top.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (player, balance) -> balance, LinkedHashMap::new));
+  }
+
+  private String getTopPlayer(int rank) {
+      String[] topPlayers = getTopPlayers().keySet().toArray(new String[0]);
+
+      if (rank > topPlayers.length || rank < 1)
+          return "";
+
+      return topPlayers[rank - 1];
+  }
+
+  private double getTopBalance(int rank) {
+      Double[] topBalances = getTopPlayers().values().toArray(new Double[0]);
+
+      if (rank > topBalances.length || rank < 1)
+          return 0;
+
+      return topBalances[rank - 1];
+  }
+
+  private String getRank(String player) {
+      String[] topPlayers = getTopPlayers().keySet().toArray(new String[0]);
+
+      return String.valueOf(ArrayUtils.indexOf(topPlayers, player) + 1);
+  }
+
+  private int getInt(String string) {
+      try {
+          return Integer.parseInt(string);
+      } catch (NumberFormatException e) {
+          return 0;
       }
-    }
-    if (!balOrPlayer.equals("bal") && !balOrPlayer.equals("player"))  {
-        return String.valueOf(ArrayUtils.indexOf(players, balOrPlayer) + 1);
-    }
-    return "0";
   }
 }
