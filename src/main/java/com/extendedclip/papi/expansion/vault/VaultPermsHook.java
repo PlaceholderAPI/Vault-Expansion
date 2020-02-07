@@ -1,7 +1,7 @@
 /*
  *
  * Vault-Expansion
- * Copyright (C) 2018 Ryan McCarthy
+ * Copyright (C) 2018-2020 Ryan McCarthy
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ package com.extendedclip.papi.expansion.vault;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.permission.Permission;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -101,7 +101,13 @@ public class VaultPermsHook implements VaultHook {
         return getMainGroup(p) != null ? getMainGroup(p) : "";
       case "group_capital":
       case "rank_capital":
-        return getMainGroup(p) != null ? StringUtils.capitalize(getMainGroup(p).toLowerCase()) : "";
+        return getMainGroup(p) != null ? WordUtils.capitalize(getMainGroup(p).toLowerCase()) : "";
+      case "groups":
+      case "ranks":
+        return String.join(", ", getGroups(p));
+      case "groups_capital":
+      case "ranks_capital":
+        return WordUtils.capitalize(String.join(", ", getGroups(p)));
       case "prefix":
         return getPlayerPrefix(p) != null ? getPlayerPrefix(p) : "";
       case "groupprefix":
