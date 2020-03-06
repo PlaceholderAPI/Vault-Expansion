@@ -22,43 +22,91 @@ package com.extendedclip.papi.expansion.vault;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.*;
-
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import net.milkbowl.vault.economy.Economy;
-import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import static java.util.stream.Collectors.toMap;
-
 public class VaultEcoHook implements VaultHook {
 
-  private Economy econ = null;
+  private final VaultExpansion expansion;
+  private final String k;
+  private final String m;
+  private final String b;
+  private final String t;
+  private final String q;
+  private final DecimalFormat format = new DecimalFormat("#,###");
+  private final boolean baltopEnabled;
+  private final int taskDelay;
+  private final int topSize;
+  private final Map<Integer, TopPlayer> balTop = new TreeMap<>();
+  private Economy eco;
+  private BalTopTask balTopTask;
 
-  private String k, m, b, t, q;
-
-  private DecimalFormat format = new DecimalFormat("#,###");
-
-  VaultEcoHook(VaultExpansion ex) {
-    k = ex.getString("formatting.thousands", "k");
-    m = ex.getString("formatting.millions", "m");
-    b = ex.getString("formatting.billions", "b");
-    t = ex.getString("formatting.trillions", "t");
-    q = ex.getString("formatting.quadrillions", "q");
+  VaultEcoHook(VaultExpansion expansion) {
+    this.expansion = expansion;
+    baltopEnabled = (Boolean) expansion.get("baltop.enabled", true);
+    topSize = expansion.getInt("baltop.cache_size", 100);
+    taskDelay = expansion.getInt("baltop.check_delay", 30);
+    k = expansion.getString("formatting.thousands", "k");
+    m = expansion.getString("formatting.millions", "m");
+    b = expansion.getString("formatting.billions", "b");
+    t = expansion.getString("formatting.trillions", "t");
+    q = expansion.getString("formatting.quadrillions", "q");
   }
 
   @Override
   public boolean setup() {
     RegisteredServiceProvider<Economy> rsp = Bukkit.getServer().getServicesManager()
-            .getRegistration(Economy.class);
+        .getRegistration(Economy.class);
 
     if (rsp == null) {
       return false;
     }
 
-    econ = rsp.getProvider();
-    return econ != null;
+    eco = rsp.getProvider();
+
+    if (eco != null && baltopEnabled) {
+      this.balTopTask = new BalTopTask(this);
+      balTopTask.runTaskTimerAsynchronously(expansion.getPlaceholderAPI(), 20, 20 * taskDelay);
+    }
+    return eco != null;
+  }
+
+  public void clear() {
+    balTop.clear();
+    if (this.balTopTask != null) {
+      this.balTopTask.cancel();
+      this.balTopTask = null;
+    }
+  }
+
+  protected Economy getEco() {
+    return eco;
+  }
+
+  protected VaultExpansion getExpansion() {
+    return this.expansion;
+  }
+
+  protected Map<Integer, TopPlayer> getBalTop() {
+    return balTop;
+  }
+
+  void setBalTop(Map<String, Double> map) {
+    this.balTop.clear();
+    int count = 1;
+    for (Entry<String, Double> entry : map.entrySet()) {
+      if (count >= topSize) {
+        break;
+      }
+      balTop.put(count, new TopPlayer(entry.getKey(), entry.getValue()));
+      count++;
+    }
   }
 
   @Override
@@ -70,8 +118,9 @@ public class VaultEcoHook implements VaultHook {
     if (identifier.startsWith("top_balance_fixed_")) {
       String[] args = identifier.split("top_balance_fixed_");
 
-      if (args.length > 1)
+      if (args.length > 1) {
         return toLong(getTopBalance(getInt(args[1])));
+      }
 
       return "0";
     }
@@ -79,17 +128,19 @@ public class VaultEcoHook implements VaultHook {
     if (identifier.startsWith("top_balance_formatted_")) {
       String[] args = identifier.split("top_balance_formatted_");
 
-      if (args.length > 1)
+      if (args.length > 1) {
         return fixMoney(getTopBalance(getInt(args[1])));
+      }
 
       return "0";
     }
 
-    if (identifier.startsWith("top_balance_commas")) {
+    if (identifier.startsWith("top_balance_commas_")) {
       String[] args = identifier.split("top_balance_commas_");
 
-      if (args.length > 1)
+      if (args.length > 1) {
         return format.format(getTopBalance(getInt(args[1])));
+      }
 
       return "0";
     }
@@ -97,8 +148,9 @@ public class VaultEcoHook implements VaultHook {
     if (identifier.startsWith("top_balance_")) {
       String[] args = identifier.split("top_balance_");
 
-      if (args.length > 1)
+      if (args.length > 1) {
         return String.valueOf(getTopBalance(getInt(args[1])));
+      }
 
       return "0";
     }
@@ -106,8 +158,9 @@ public class VaultEcoHook implements VaultHook {
     if (identifier.startsWith("top_player_")) {
       String[] args = identifier.split("top_player_");
 
-      if (args.length > 1)
+      if (args.length > 1) {
         return getTopPlayer(getInt(args[1]));
+      }
 
       return "";
     }
@@ -128,8 +181,7 @@ public class VaultEcoHook implements VaultHook {
   }
 
   private String toLong(double amt) {
-    long send = (long) amt;
-    return String.valueOf(send);
+    return String.valueOf((long) amt);
   }
 
   private String format(double d) {
@@ -163,56 +215,41 @@ public class VaultEcoHook implements VaultHook {
     return toLong(d);
   }
 
-  private double getBalance(OfflinePlayer p) {
-    if (econ != null) {
-      return econ.getBalance(p);
+  double getBalance(OfflinePlayer p) {
+    if (eco != null) {
+      return eco.getBalance(p);
     }
     return 0;
   }
 
-  private Map<String, Double> getTopPlayers() {
-    Map<String, Double> top = new LinkedHashMap<>();
-
-    for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-        if (player == null || player.getName() == null)
-            continue;
-
-        top.put(player.getName(), econ.getBalance(player));
-    }
-
-    return top.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (player, balance) -> balance, LinkedHashMap::new));
-  }
-
   private String getTopPlayer(int rank) {
-      String[] topPlayers = getTopPlayers().keySet().toArray(new String[0]);
-
-      if (rank > topPlayers.length || rank < 1)
-          return "";
-
-      return topPlayers[rank - 1];
+    if (!baltopEnabled || !balTop.containsKey(rank)) {
+      return "";
+    }
+    return balTop.get(rank).getName();
   }
 
   private double getTopBalance(int rank) {
-      Double[] topBalances = getTopPlayers().values().toArray(new Double[0]);
-
-      if (rank > topBalances.length || rank < 1)
-          return 0;
-
-      return topBalances[rank - 1];
+    if (!baltopEnabled || !balTop.containsKey(rank)) {
+      return 0;
+    }
+    return balTop.get(rank).getBal();
   }
 
   private String getRank(String player) {
-      String[] topPlayers = getTopPlayers().keySet().toArray(new String[0]);
-
-      return String.valueOf(ArrayUtils.indexOf(topPlayers, player) + 1);
+    if (!baltopEnabled) {
+      return null;
+    }
+    Entry<Integer, TopPlayer> entry = balTop.entrySet().stream().filter(e ->
+        e.getValue().getName().equals(player)).findFirst().orElse(null);
+    return entry == null ? "" : entry.getKey().toString();
   }
 
   private int getInt(String string) {
-      try {
-          return Integer.parseInt(string);
-      } catch (NumberFormatException e) {
-          return 0;
-      }
+    try {
+      return Integer.parseInt(string);
+    } catch (NumberFormatException e) {
+      return 0;
+    }
   }
 }

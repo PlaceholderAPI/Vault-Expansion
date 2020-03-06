@@ -20,11 +20,29 @@
  */
 package com.extendedclip.papi.expansion.vault;
 
-import org.bukkit.OfflinePlayer;
+class TopPlayer {
 
-interface VaultHook {
+  private String name;
+  private double bal;
 
-  boolean setup();
+  public TopPlayer(String name, double bal) {
+    setName(name);
+    setBal(bal);
+  }
 
-  String onPlaceholderRequest(OfflinePlayer p, String s);
+  public String getName() {
+    return name;
+  }
+
+  private void setName(String name) {
+    this.name = name;
+  }
+
+  public double getBal() {
+    return bal;
+  }
+
+  private void setBal(double bal) {
+    this.bal = bal;
+  }
 }

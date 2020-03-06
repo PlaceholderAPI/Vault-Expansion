@@ -78,14 +78,13 @@ public class VaultPermsHook implements VaultHook {
       }
       return getGroupPrefix(p, i);
     } else if (identifier.startsWith("groupsuffix_")) {
-      int i = 1;
       try {
-        i = Integer.parseInt(identifier.split("groupsuffix_")[1]);
+        int i = Integer.parseInt(identifier.split("groupsuffix_")[1]);
+        return getGroupSuffix(p, i);
       } catch (NumberFormatException e) {
-        //easter egg
-        return "provide a number dipshit";
+        return "provide a number";
       }
-      return getGroupSuffix(p, i);
+
     } else if (identifier.startsWith("hasgroup_")) {
 
       return perms.playerInGroup(getWorldName(), p, identifier.split("hasgroup_")[1])
@@ -130,22 +129,22 @@ public class VaultPermsHook implements VaultHook {
     return null;
   }
 
-  public String getWorldName() {
+  private String getWorldName() {
     return getMainWorld().getName();
   }
 
-  public World getMainWorld() {
+  private World getMainWorld() {
     return Bukkit.getWorlds().get(0);
   }
 
-  public String[] getGroups(OfflinePlayer p) {
+  private String[] getGroups(OfflinePlayer p) {
     if (perms.getPlayerGroups(getWorldName(), p) != null) {
       return perms.getPlayerGroups(Bukkit.getWorlds().get(0).getName(), p);
     }
     return new String[]{""};
   }
 
-  public String getMainGroup(OfflinePlayer p) {
+  private String getMainGroup(OfflinePlayer p) {
     if (perms.getPrimaryGroup(getWorldName(), p) != null) {
       return perms.getPrimaryGroup(getWorldName(), p);
     }
@@ -156,21 +155,21 @@ public class VaultPermsHook implements VaultHook {
     return perms.playerHas(getWorldName(), p, perm);
   }
 
-  public String getPlayerPrefix(OfflinePlayer p) {
+  private String getPlayerPrefix(OfflinePlayer p) {
     if (chat.getPlayerPrefix(getWorldName(), p) != null) {
       return chat.getPlayerPrefix(getWorldName(), p);
     }
     return "";
   }
 
-  public String getPlayerSuffix(OfflinePlayer p) {
+  private String getPlayerSuffix(OfflinePlayer p) {
     if (chat.getPlayerSuffix(getWorldName(), p) != null) {
       return chat.getPlayerSuffix(getWorldName(), p);
     }
     return "";
   }
 
-  public String getGroupSuffix(OfflinePlayer p) {
+  private String getGroupSuffix(OfflinePlayer p) {
     if (perms.getPrimaryGroup(getWorldName(), p) == null) {
       return "";
     }
@@ -181,7 +180,7 @@ public class VaultPermsHook implements VaultHook {
     return "";
   }
 
-  public String getGroupPrefix(OfflinePlayer p) {
+  private String getGroupPrefix(OfflinePlayer p) {
     if (perms.getPrimaryGroup(getWorldName(), p) == null) {
       return "";
     }
@@ -192,7 +191,7 @@ public class VaultPermsHook implements VaultHook {
     return "";
   }
 
-  public String getGroupSuffix(OfflinePlayer p, int i) {
+  private String getGroupSuffix(OfflinePlayer p, int i) {
     String[] groups = getGroups(p);
     if (i > groups.length) {
       return "";
@@ -210,7 +209,7 @@ public class VaultPermsHook implements VaultHook {
     return "";
   }
 
-  public String getGroupPrefix(OfflinePlayer p, int i) {
+  private String getGroupPrefix(OfflinePlayer p, int i) {
     String[] groups = getGroups(p);
     if (i > groups.length) {
       return "";
@@ -228,7 +227,7 @@ public class VaultPermsHook implements VaultHook {
     return "";
   }
 
-  public String getLastColor(String s) {
+  private String getLastColor(String s) {
     if (s == null || s.isEmpty()) {
       return "";
     }
@@ -252,7 +251,7 @@ public class VaultPermsHook implements VaultHook {
     if (perms != null) {
       return perms.playerHas(getWorldName(), p, perm);
     }
-    return p.isOnline() ? ((Player) p).hasPermission(perm) : false;
+    return p.isOnline() && ((Player) p).hasPermission(perm);
   }
 
   public String[] getServerGroups() {

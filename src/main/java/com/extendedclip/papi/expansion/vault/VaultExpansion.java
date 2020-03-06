@@ -30,10 +30,9 @@ import org.bukkit.OfflinePlayer;
 
 public class VaultExpansion extends PlaceholderExpansion implements Cacheable, Configurable {
 
-  private VaultPermsHook perms = null;
-  private VaultEcoHook eco = null;
-
   private final String VERSION = getClass().getPackage().getImplementationVersion();
+  private VaultPermsHook perms;
+  private VaultEcoHook eco;
 
   public VaultExpansion() {
     perms = new VaultPermsHook();
@@ -42,18 +41,24 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
 
   @Override
   public void clear() {
+    if (eco != null) {
+      eco.clear();
+    }
     eco = null;
     perms = null;
   }
 
   @Override
   public boolean canRegister() {
-    return Bukkit.getPluginManager().getPlugin(getPlugin()) != null;
+    return Bukkit.getPluginManager().getPlugin(getRequiredPlugin()) != null;
   }
 
   @Override
   public Map<String, Object> getDefaults() {
-    Map<String, Object> defaults = new HashMap<String, Object>();
+    Map<String, Object> defaults = new HashMap<>();
+    defaults.put("baltop.enabled", true);
+    defaults.put("baltop.cache_size", 100);
+    defaults.put("baltop.check_delay", 30);
     defaults.put("formatting.thousands", "k");
     defaults.put("formatting.millions", "M");
     defaults.put("formatting.billions", "B");
@@ -87,7 +92,7 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
   }
 
   @Override
-  public String getPlugin() {
+  public String getRequiredPlugin() {
     return "Vault";
   }
 
