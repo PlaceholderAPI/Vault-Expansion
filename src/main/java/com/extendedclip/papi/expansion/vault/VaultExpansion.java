@@ -36,7 +36,7 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
 
   public VaultExpansion() {
     perms = new VaultPermsHook();
-    eco = new VaultEcoHook(this);
+    eco = new VaultEcoHook(this, perms);
   }
 
   @Override
