@@ -32,9 +32,11 @@ import org.bukkit.scheduler.BukkitRunnable;
 class BalTopTask extends BukkitRunnable {
 
   private final VaultEcoHook eco;
+  private final VaultPermsHook perms;
 
-  public BalTopTask(VaultEcoHook eco) {
+  public BalTopTask(VaultEcoHook eco, VaultPermsHook perms) {
     this.eco = eco;
+    this.perms = perms;
   }
 
   @Override
@@ -45,7 +47,9 @@ class BalTopTask extends BukkitRunnable {
       if (player == null || player.getName() == null) {
         continue;
       }
-      top.put(player.getName(), eco.getBalance(player));
+      if(!perms.hasPerm(player, "essentials.balancetop.exclude") || !Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
+        top.put(player.getName(), eco.getBalance(player));
+      }
     }
 
     eco.setBalTop(

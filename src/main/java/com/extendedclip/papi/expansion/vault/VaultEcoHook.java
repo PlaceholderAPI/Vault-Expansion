@@ -45,10 +45,12 @@ public class VaultEcoHook implements VaultHook {
   private final int topSize;
   private final Map<Integer, TopPlayer> balTop = new TreeMap<>();
   private Economy eco;
+  private VaultPermsHook perms;
   private BalTopTask balTopTask;
 
-  VaultEcoHook(VaultExpansion expansion) {
+  VaultEcoHook(VaultExpansion expansion, VaultPermsHook perms) {
     this.expansion = expansion;
+    this.perms = perms;
     baltopEnabled = (Boolean) expansion.get("baltop.enabled", true);
     topSize = expansion.getInt("baltop.cache_size", 100);
     taskDelay = expansion.getInt("baltop.check_delay", 30);
@@ -71,7 +73,7 @@ public class VaultEcoHook implements VaultHook {
     eco = rsp.getProvider();
 
     if (eco != null && baltopEnabled) {
-      this.balTopTask = new BalTopTask(this);
+      this.balTopTask = new BalTopTask(this, perms);
       balTopTask.runTaskTimerAsynchronously(expansion.getPlaceholderAPI(), 20, 20 * taskDelay);
     }
     return eco != null;
