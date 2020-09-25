@@ -57,7 +57,7 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
     @Override
     public Map<String, Object> getDefaults() {
         final Map<String, Object> defaults = new HashMap<>();
-        defaults.put("baltop.enabled", true);
+        defaults.put("baltop.enabled", false);
         defaults.put("baltop.cache_size", 100);
         defaults.put("baltop.check_delay", 30);
         defaults.put("formatting.thousands", "k");
