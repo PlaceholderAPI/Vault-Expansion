@@ -22,27 +22,27 @@ package com.extendedclip.papi.expansion.vault;
 
 class TopPlayer {
 
-  private String name;
-  private double bal;
+    private String name;
+    private double bal;
 
-  public TopPlayer(String name, double bal) {
-    setName(name);
-    setBal(bal);
-  }
+    public TopPlayer(String name, double bal) {
+        setName(name);
+        setBal(bal);
+    }
 
-  public String getName() {
-    return name;
-  }
+    public String getName() {
+        return name;
+    }
 
-  private void setName(String name) {
-    this.name = name;
-  }
+    private void setName(String name) {
+        this.name = name;
+    }
 
-  public double getBal() {
-    return bal;
-  }
+    public double getBal() {
+        return bal;
+    }
 
-  private void setBal(double bal) {
-    this.bal = bal;
-  }
+    private void setBal(double bal) {
+        this.bal = bal;
+    }
 }

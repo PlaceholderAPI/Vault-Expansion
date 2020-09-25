@@ -24,7 +24,7 @@ import org.bukkit.OfflinePlayer;
 
 interface VaultHook {
 
-  boolean setup();
+    boolean setup();
 
-  String onPlaceholderRequest(OfflinePlayer p, String s);
+    String onPlaceholderRequest(OfflinePlayer p, String s);
 }

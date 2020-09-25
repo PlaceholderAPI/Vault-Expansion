@@ -20,41 +20,42 @@
  */
 package com.extendedclip.papi.expansion.vault;
 
-import static java.util.stream.Collectors.toMap;
-
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static java.util.stream.Collectors.toMap;
+
 class BalTopTask extends BukkitRunnable {
 
-  private final VaultEcoHook eco;
-  private final VaultPermsHook perms;
+    private final VaultEcoHook eco;
+    private final VaultPermsHook perms;
 
-  public BalTopTask(VaultEcoHook eco, VaultPermsHook perms) {
-    this.eco = eco;
-    this.perms = perms;
-  }
-
-  @Override
-  public void run() {
-    Map<String, Double> top = new LinkedHashMap<>();
-
-    for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-      if (player == null || player.getName() == null) {
-        continue;
-      }
-      if(!perms.hasPerm(player, "essentials.balancetop.exclude") || !Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
-        top.put(player.getName(), eco.getBalance(player));
-      }
+    public BalTopTask(VaultEcoHook eco, VaultPermsHook perms) {
+        this.eco = eco;
+        this.perms = perms;
     }
 
-    eco.setBalTop(
-        top.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (player, balance) -> balance,
-                LinkedHashMap::new)));
-  }
+    @Override
+    public void run() {
+        final Map<String, Double> top = new LinkedHashMap<>();
+
+        for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+            if (player == null || player.getName() == null) {
+                continue;
+            }
+            if (!perms.hasPerm(player, "essentials.balancetop.exclude") || !Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
+                top.put(player.getName(), eco.getBalance(player));
+            }
+        }
+
+        eco.setBalTop(
+                top.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (player, balance) -> balance,
+                                LinkedHashMap::new)));
+    }
 }
