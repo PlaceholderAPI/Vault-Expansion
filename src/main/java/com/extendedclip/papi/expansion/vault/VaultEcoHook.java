@@ -200,10 +200,7 @@ public class VaultEcoHook implements VaultHook {
     }
 
     private String format(double d) {
-        NumberFormat format = NumberFormat.getInstance(Locale.ENGLISH);
-        format.setMaximumFractionDigits(2);
-        format.setMinimumFractionDigits(0);
-        return eco.format(d);
+        return eco == null ? "0" : eco.format(d);
     }
 
     private String fixMoney(double d) {
