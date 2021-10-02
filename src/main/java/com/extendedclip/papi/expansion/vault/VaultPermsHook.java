@@ -20,6 +20,7 @@
  */
 package com.extendedclip.papi.expansion.vault;
 
+import com.google.common.primitives.Ints;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.permission.Permission;
@@ -31,76 +32,75 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.util.regex.Pattern;
+
 public class VaultPermsHook implements VaultHook {
 
-    private Permission perms = null;
-    private Chat chat = null;
+    private static final Pattern RANK_PREFIX_PATTERN = Pattern.compile("rankprefix_");
+    private static final Pattern RANK_SUFFIX_PATTERN = Pattern.compile("ranksuffix_");
+    private static final Pattern GROUP_PREFIX_PATTERN = Pattern.compile("groupprefix_");
+    private static final Pattern GROUP_SUFFIX_PATTERN = Pattern.compile("groupsuffix_");
+
+    private static final Pattern HAS_GROUP_PATTERN = Pattern.compile("hasgroup_");
+    private static final Pattern IN_PRIMARY_GROUP_PATTERN = Pattern.compile("inprimarygroup_");
+
+    private Permission perms;
+    private Chat chat;
 
     @Override
     public boolean setup() {
-        RegisteredServiceProvider<Permission> permsProvider = Bukkit.getServer().getServicesManager()
-                .getRegistration(Permission.class);
-        if (permsProvider != null && permsProvider.getPlugin() != null) {
-            perms = permsProvider.getProvider();
+        final RegisteredServiceProvider<Permission> permsProvider = Bukkit.getServer().getServicesManager().getRegistration(Permission.class);
+
+        if (permsProvider != null) {
+            this.perms = permsProvider.getProvider();
         }
-        RegisteredServiceProvider<Chat> chatProvider = Bukkit.getServer().getServicesManager()
-                .getRegistration(Chat.class);
-        if (chatProvider != null && chatProvider.getPlugin() != null) {
-            chat = chatProvider.getProvider();
+
+        final RegisteredServiceProvider<Chat> chatProvider = Bukkit.getServer().getServicesManager().getRegistration(Chat.class);
+
+        if (chatProvider != null) {
+            this.chat = chatProvider.getProvider();
         }
+
         return perms != null && chat != null;
     }
 
     @Override
     public String onPlaceholderRequest(OfflinePlayer p, String identifier) {
-        if (identifier.startsWith("rankprefix_")) {
-            int i = 1;
-            try {
-                i = Integer.parseInt(identifier.split("rankprefix_")[1]);
-            } catch (Exception e) {
-                //uh oh
-            }
-            return getGroupPrefix(p, i);
-        } else if (identifier.startsWith("ranksuffix_")) {
-            int i = 1;
-            try {
-                i = Integer.parseInt(identifier.split("ranksuffix_")[1]);
-            } catch (NumberFormatException e) {
-                // uh fucking oh...
-            }
-            return getGroupSuffix(p, i);
-        } else if (identifier.startsWith("groupprefix_")) {
-            int i = 1;
-            try {
-                i = Integer.parseInt(identifier.split("groupprefix_")[1]);
-            } catch (NumberFormatException e) {
-                //  uh fucking FUCKING oh.
-            }
-            return getGroupPrefix(p, i);
-        } else if (identifier.startsWith("groupsuffix_")) {
-            try {
-                int i = Integer.parseInt(identifier.split("groupsuffix_")[1]);
-                return getGroupSuffix(p, i);
-            } catch (NumberFormatException e) {
-                return "provide a number";
-            }
-
-        } else if (identifier.startsWith("hasgroup_")) {
-
-            return perms.playerInGroup(getWorldName(), p, identifier.split("hasgroup_")[1])
-                    ? PlaceholderAPIPlugin
-                    .booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
-        } else if (identifier.startsWith("inprimarygroup_")) {
-            return getMainGroup(p).equals(identifier.split("inprimarygroup_")[1])
-                    ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
+        if (p == null) {
+            return "";
         }
+
+        if (identifier.startsWith("rankprefix_")) {
+            return getGroupPrefix(p, parseInt(RANK_PREFIX_PATTERN.split(identifier)[1], 1));
+        }
+
+        if (identifier.startsWith("ranksuffix_")) {
+            return getGroupSuffix(p, parseInt(RANK_SUFFIX_PATTERN.split(identifier)[1], 1));
+        }
+
+        if (identifier.startsWith("groupprefix_")) {
+            return getGroupPrefix(p, parseInt(GROUP_PREFIX_PATTERN.split(identifier)[1], 1));
+        }
+
+        if (identifier.startsWith("groupsuffix_")) {
+            return getGroupSuffix(p, parseInt(GROUP_SUFFIX_PATTERN.split(identifier)[1], 1));
+        }
+
+        if (identifier.startsWith("hasgroup_")) {
+            return bool(perms.playerInGroup(getWorldName(), p, HAS_GROUP_PATTERN.split(identifier)[1]));
+        }
+
+        if (identifier.startsWith("inprimarygroup_")) {
+            return bool(getMainGroup(p).equals(IN_PRIMARY_GROUP_PATTERN.split(identifier)[1]));
+        }
+
         switch (identifier) {
             case "group":
             case "rank":
-                return getMainGroup(p) != null ? getMainGroup(p) : "";
+                return getMainGroup(p);
             case "group_capital":
             case "rank_capital":
-                return getMainGroup(p) != null ? WordUtils.capitalize(getMainGroup(p).toLowerCase()) : "";
+                return WordUtils.capitalize(getMainGroup(p).toLowerCase());
             case "groups":
             case "ranks":
                 return String.join(", ", getGroups(p));
@@ -108,15 +108,15 @@ public class VaultPermsHook implements VaultHook {
             case "ranks_capital":
                 return WordUtils.capitalize(String.join(", ", getGroups(p)));
             case "prefix":
-                return getPlayerPrefix(p) != null ? getPlayerPrefix(p) : "";
+                return getPlayerPrefix(p);
             case "groupprefix":
             case "rankprefix":
-                return getGroupPrefix(p) != null ? getGroupPrefix(p) : "";
+                return getGroupPrefix(p);
             case "suffix":
-                return getPlayerSuffix(p) != null ? getPlayerSuffix(p) : "";
+                return getPlayerSuffix(p);
             case "groupsuffix":
             case "ranksuffix":
-                return getGroupSuffix(p) != null ? getGroupSuffix(p) : "";
+                return getGroupSuffix(p);
             case "prefix_color":
                 return getLastColor(getGroupPrefix(p));
             case "suffix_color":
@@ -138,17 +138,13 @@ public class VaultPermsHook implements VaultHook {
     }
 
     private String[] getGroups(OfflinePlayer p) {
-        if (perms.getPlayerGroups(getWorldName(), p) != null) {
-            return perms.getPlayerGroups(Bukkit.getWorlds().get(0).getName(), p);
-        }
-        return new String[]{""};
+        final String[] groups = perms.getPlayerGroups(getWorldName(), p);
+        return groups == null ? new String[]{} : groups;
     }
 
     private String getMainGroup(OfflinePlayer p) {
-        if (perms.getPrimaryGroup(getWorldName(), p) != null) {
-            return perms.getPrimaryGroup(getWorldName(), p);
-        }
-        return "";
+        final String group = perms.getPrimaryGroup(getWorldName(), p);
+        return group == null ? "" : group;
     }
 
     public boolean hasPermission(OfflinePlayer p, String perm) {
@@ -156,74 +152,58 @@ public class VaultPermsHook implements VaultHook {
     }
 
     private String getPlayerPrefix(OfflinePlayer p) {
-        if (chat.getPlayerPrefix(getWorldName(), p) != null) {
-            return chat.getPlayerPrefix(getWorldName(), p);
-        }
-        return "";
+        final String prefix = chat.getPlayerPrefix(getWorldName(), p);
+        return prefix == null ? "" : prefix;
     }
 
     private String getPlayerSuffix(OfflinePlayer p) {
-        if (chat.getPlayerSuffix(getWorldName(), p) != null) {
-            return chat.getPlayerSuffix(getWorldName(), p);
-        }
-        return "";
+        final String suffix = chat.getPlayerSuffix(getWorldName(), p);
+        return suffix == null ? "" : suffix;
     }
 
     private String getGroupSuffix(OfflinePlayer p) {
-        if (perms.getPrimaryGroup(getWorldName(), p) == null) {
-            return "";
-        }
-        String suffix = chat.getGroupSuffix(getMainWorld(), getMainGroup(p));
-        if (suffix != null) {
-            return suffix;
-        }
-        return "";
+        final String suffix = chat.getGroupSuffix(getMainWorld(), getMainGroup(p));
+        return suffix == null? "" : suffix;
     }
 
     private String getGroupPrefix(OfflinePlayer p) {
-        if (perms.getPrimaryGroup(getWorldName(), p) == null) {
+        final String prefix = chat.getGroupPrefix(getMainWorld(), getMainGroup(p));
+        return prefix == null ? "" : prefix;
+    }
+
+    private String getGroupSuffix(OfflinePlayer p, int n) {
+        final String[] groups = getGroups(p);
+
+        if (n > groups.length) {
             return "";
         }
-        String prefix = chat.getGroupPrefix(getMainWorld(), getMainGroup(p));
-        if (prefix != null) {
-            return prefix;
+
+        for (int i = n - 1; i < groups.length; i++) {
+            final String suffix = chat.getGroupSuffix(getMainWorld(), groups[i]);
+
+            if (suffix != null) {
+                return suffix;
+            }
         }
+
         return "";
     }
 
-    private String getGroupSuffix(OfflinePlayer p, int i) {
-        String[] groups = getGroups(p);
-        if (i > groups.length) {
-            return "";
-        }
-        int count = 1;
-        for (String group : groups) {
-            if (count < i) {
-                count++;
-                continue;
-            }
-            if (chat.getGroupSuffix(getMainWorld(), group) != null) {
-                return chat.getGroupSuffix(getWorldName(), group);
-            }
-        }
-        return "";
-    }
+    private String getGroupPrefix(OfflinePlayer p, int n) {
+        final String[] groups = getGroups(p);
 
-    private String getGroupPrefix(OfflinePlayer p, int i) {
-        String[] groups = getGroups(p);
-        if (i > groups.length) {
+        if (n > groups.length) {
             return "";
         }
-        int count = 1;
-        for (String group : groups) {
-            if (count < i) {
-                count++;
-                continue;
-            }
-            if (chat.getGroupPrefix(getMainWorld(), group) != null) {
-                return String.valueOf(chat.getGroupPrefix(getMainWorld(), group));
+
+        for (int i = n - 1; i < groups.length; i++) {
+            final String prefix = chat.getGroupPrefix(getMainWorld(), groups[i]);
+
+            if (prefix != null) {
+                return prefix;
             }
         }
+
         return "";
     }
 
@@ -247,6 +227,15 @@ public class VaultPermsHook implements VaultHook {
         return clr;
     }
 
+    private int parseInt(String string, int def) {
+        final Integer integer = Ints.tryParse(string);
+        return integer == null ? def : integer;
+    }
+
+    private String bool(boolean bool) {
+        return bool ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
+    }
+
     public boolean hasPerm(OfflinePlayer p, String perm) {
         if (perms != null) {
             return perms.playerHas(getWorldName(), p, perm);
@@ -255,9 +244,10 @@ public class VaultPermsHook implements VaultHook {
     }
 
     public String[] getServerGroups() {
-        if (perms.getGroups() != null) {
-            return perms.getGroups();
-        }
-        return new String[]{""};
+        final String[] groups = perms.getGroups();
+        return groups == null ? new String[]{} : groups;
     }
+
+
+
 }

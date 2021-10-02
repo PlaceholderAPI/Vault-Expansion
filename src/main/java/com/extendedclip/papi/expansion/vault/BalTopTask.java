@@ -27,6 +27,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -48,14 +49,16 @@ class BalTopTask extends BukkitRunnable {
             if (player == null || player.getName() == null) {
                 continue;
             }
+
             if (!perms.hasPerm(player, "essentials.balancetop.exclude") || !Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
                 top.put(player.getName(), eco.getBalance(player));
             }
         }
 
         eco.setBalTop(
-                top.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (player, balance) -> balance,
-                                LinkedHashMap::new)));
+                top.entrySet().stream()
+                        .sorted(Collections.reverseOrder(Entry.comparingByValue()))
+                        .collect(toMap(Entry::getKey, Entry::getValue, (player, balance) -> balance, LinkedHashMap::new))
+        );
     }
 }
