@@ -122,10 +122,6 @@ public class VaultEcoHook implements VaultHook {
 
     @Override
     public String onPlaceholderRequest(OfflinePlayer p, String identifier) {
-        if (p == null) {
-            return "";
-        }
-
         if (!baltopEnabled) {
             return (identifier.startsWith("top_balance")) ? "0" : "";
         }
@@ -177,6 +173,10 @@ public class VaultEcoHook implements VaultHook {
                 return getTopPlayer(getInt(args[1]));
             }
 
+            return "";
+        }
+
+        if (p == null) {
             return "";
         }
 
