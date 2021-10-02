@@ -23,8 +23,9 @@ package com.extendedclip.papi.expansion.vault;
 import me.clip.placeholderapi.expansion.Cacheable;
 import me.clip.placeholderapi.expansion.Configurable;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,11 +48,6 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
         }
         eco = null;
         perms = null;
-    }
-
-    @Override
-    public boolean canRegister() {
-        return Bukkit.getPluginManager().getPlugin(getRequiredPlugin()) != null;
     }
 
     @Override
@@ -83,33 +79,35 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
     }
 
     @Override
-    public String getAuthor() {
+    public @NotNull String getAuthor() {
         return "clip";
     }
 
     @Override
-    public String getIdentifier() {
+    public @NotNull String getIdentifier() {
         return "vault";
     }
 
     @Override
-    public String getRequiredPlugin() {
+    public @Nullable String getRequiredPlugin() {
         return "Vault";
     }
 
     @Override
-    public String getVersion() {
+    public @NotNull String getVersion() {
         return VERSION;
     }
 
     @Override
     public String onRequest(OfflinePlayer p, String i) {
-        if (i.startsWith("eco_") && eco != null) {
+        if (eco != null && i.startsWith("eco_")) {
             return eco.onPlaceholderRequest(p, i.replace("eco_", ""));
         }
+
         if (perms != null) {
             return perms.onPlaceholderRequest(p, i);
         }
+
         return null;
     }
 }
