@@ -27,11 +27,11 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.Locale;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VaultEcoHook implements VaultHook {
@@ -41,6 +41,10 @@ public class VaultEcoHook implements VaultHook {
     private static final Pattern TOP_BALANCE_COMMAS_PATTERN = Pattern.compile("top_balance_commas_");
     private static final Pattern TOP_BALANCE_PATTERN = Pattern.compile("top_balance_");
     private static final Pattern TOP_PLAYER_PATTERN = Pattern.compile("top_player_");
+
+    private static final Pattern BALANCE_DECIMAL_POINTS_PATTERN = Pattern.compile("balance_(?<points>\\d+)dp");
+
+    private final Map<Integer, DecimalFormat> decimalFormats = new HashMap<>();
 
     private final VaultExpansion expansion;
     private final String k;
@@ -180,6 +184,14 @@ public class VaultEcoHook implements VaultHook {
             return "";
         }
 
+        if (identifier.startsWith("balance_")) {
+            final Matcher matcher = BALANCE_DECIMAL_POINTS_PATTERN.matcher(identifier);
+
+            if (matcher.find()) {
+                return setDecimalPoints(getBalance(p), getInt(matcher.group("points")));
+            }
+        }
+
         switch (identifier) {
             case "balance":
                 return String.valueOf(getBalance(p));
@@ -225,6 +237,21 @@ public class VaultEcoHook implements VaultHook {
         }
 
         return toLong(d);
+    }
+
+    private String setDecimalPoints(double d, int points) {
+        DecimalFormat decimalFormat = this.decimalFormats.get(points);
+
+        if (decimalFormat != null) {
+            return decimalFormat.format(d);
+        }
+
+        decimalFormat = (DecimalFormat) DecimalFormat.getIntegerInstance();
+        decimalFormat.setMaximumFractionDigits(points);
+        decimalFormat.setGroupingUsed(false);
+
+        this.decimalFormats.put(points, decimalFormat);
+        return decimalFormat.format(d);
     }
 
     double getBalance(OfflinePlayer p) {
