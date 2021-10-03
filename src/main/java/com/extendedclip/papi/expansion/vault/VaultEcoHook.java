@@ -126,7 +126,7 @@ public class VaultEcoHook implements VaultHook {
 
     @Override
     public String onPlaceholderRequest(OfflinePlayer p, String identifier) {
-        if (!baltopEnabled) {
+        if (!baltopEnabled && identifier.startsWith("top_")) {
             return (identifier.startsWith("top_balance")) ? "0" : "";
         }
 
