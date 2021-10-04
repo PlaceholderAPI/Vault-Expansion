@@ -46,7 +46,6 @@ public class VaultEcoHook implements VaultHook {
 
     private final Map<Integer, DecimalFormat> decimalFormats = new HashMap<>();
 
-    private final VaultExpansion expansion;
     private final String k;
     private final String m;
     private final String b;
@@ -57,13 +56,17 @@ public class VaultEcoHook implements VaultHook {
     private final int taskDelay;
     private final int topSize;
     private final Map<Integer, TopPlayer> balTop = new TreeMap<>();
+
+    private final VaultExpansion expansion;
+    private final VaultPermsHook perms;
+
     private Economy eco;
-    private VaultPermsHook perms;
     private BalTopTask balTopTask;
 
     VaultEcoHook(VaultExpansion expansion, VaultPermsHook perms) {
         this.expansion = expansion;
         this.perms = perms;
+
         baltopEnabled = (Boolean) expansion.get("baltop.enabled", false);
         topSize = expansion.getInt("baltop.cache_size", 100);
         taskDelay = expansion.getInt("baltop.check_delay", 30);
@@ -85,10 +88,11 @@ public class VaultEcoHook implements VaultHook {
 
         eco = rsp.getProvider();
 
-        if (eco != null && baltopEnabled) {
+        if (baltopEnabled) {
             this.balTopTask = new BalTopTask(this, perms);
             balTopTask.runTaskTimerAsynchronously(expansion.getPlaceholderAPI(), 20, 20 * taskDelay);
         }
+
         return eco != null;
     }
 
