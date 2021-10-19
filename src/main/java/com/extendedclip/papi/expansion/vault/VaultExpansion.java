@@ -32,7 +32,6 @@ import java.util.Map;
 
 public class VaultExpansion extends PlaceholderExpansion implements Cacheable, Configurable {
 
-    private final String VERSION = getClass().getPackage().getImplementationVersion();
     private VaultPermsHook perms;
     private VaultEcoHook eco;
 
@@ -95,11 +94,11 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
 
     @Override
     public @NotNull String getVersion() {
-        return VERSION;
+        return "1.7.1";
     }
 
     @Override
-    public String onRequest(OfflinePlayer p, String i) {
+    public String onRequest(OfflinePlayer p, @NotNull String i) {
         if (eco != null && i.startsWith("eco_")) {
             return eco.onPlaceholderRequest(p, i.replace("eco_", ""));
         }
