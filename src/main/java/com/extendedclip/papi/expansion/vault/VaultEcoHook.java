@@ -51,7 +51,7 @@ public class VaultEcoHook implements VaultHook {
     private final String b;
     private final String t;
     private final String q;
-    private final DecimalFormat format = new DecimalFormat("#,###");
+    private final DecimalFormat format = new DecimalFormat("#.###");
     private final boolean baltopEnabled;
     private final int taskDelay;
     private final int topSize;
