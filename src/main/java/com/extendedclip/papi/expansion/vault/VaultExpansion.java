@@ -37,14 +37,11 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
 
     public VaultExpansion() {
         perms = new VaultPermsHook();
-        eco = new VaultEcoHook(this, perms);
+        eco = new VaultEcoHook(this);
     }
 
     @Override
     public void clear() {
-        if (eco != null) {
-            eco.clear();
-        }
         eco = null;
         perms = null;
     }
@@ -52,9 +49,6 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
     @Override
     public Map<String, Object> getDefaults() {
         final Map<String, Object> defaults = new HashMap<>();
-        defaults.put("baltop.enabled", false);
-        defaults.put("baltop.cache_size", 100);
-        defaults.put("baltop.check_delay", 30);
         defaults.put("formatting.thousands", "k");
         defaults.put("formatting.millions", "M");
         defaults.put("formatting.billions", "B");
