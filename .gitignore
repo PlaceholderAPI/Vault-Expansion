@@ -1,3 +1,5 @@
-/target/
-.idea
-vault-expansion.iml
+.gradle/
+.idea/
+build/
+
+*.iml
