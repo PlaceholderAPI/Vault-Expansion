@@ -110,7 +110,7 @@ public class EconomyHook extends VaultHook {
 
         switch (params) {
             case "balance":
-                return String.valueOf(balance);
+                return setDecimalPoints(balance, Math.max(2, economy.fractionalDigits()));
             case "balance_fixed":
                 return FIXED_FORMAT.format(balance);
             case "balance_formatted":
