@@ -52,16 +52,11 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
     }
 
     @Override
-    public boolean register() {
-        if (economyHook.setup()) {
-            economyHook = new EconomyHook(this);
-        }
+    public boolean canRegister() {
+        economyHook = new EconomyHook(this);
+        permissionHook = new PermissionHook(this);
 
-        if (permissionHook.setup()) {
-            permissionHook = new PermissionHook(this);
-        }
-
-        return economyHook != null || permissionHook != null;
+        return economyHook.setup() || permissionHook.setup();
     }
 
     @Override
