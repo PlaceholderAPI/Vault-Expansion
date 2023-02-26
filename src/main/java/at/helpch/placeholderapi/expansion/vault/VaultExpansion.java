@@ -27,7 +27,7 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
 
     @Override
     public @NotNull String getVersion() {
-        return "1.8.0";
+        return "1.8.1";
     }
 
     @Override
@@ -38,6 +38,7 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
     @Override
     public void clear() {
         economyHook = null;
+        permissionHook = null;
     }
 
     @Override
@@ -55,8 +56,7 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
     public boolean canRegister() {
         economyHook = new EconomyHook(this);
         permissionHook = new PermissionHook(this);
-
-        return economyHook.setup() || permissionHook.setup();
+        return economyHook.isReady() || permissionHook.isReady();
     }
 
     @Override
@@ -65,11 +65,11 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
             return "";
         }
 
-        if (economyHook != null && params.startsWith("eco_")) {
+        if (economyHook.isReady() && params.startsWith("eco_")) {
             return economyHook.onRequest(player, params.replace("eco_", ""));
         }
 
-        return (permissionHook != null) ? permissionHook.onRequest(player, params) : null;
+        return (permissionHook.isReady()) ? permissionHook.onRequest(player, params) : null;
     }
 
 }

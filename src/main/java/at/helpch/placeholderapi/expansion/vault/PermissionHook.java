@@ -19,6 +19,7 @@ public class PermissionHook extends VaultHook {
 
     public PermissionHook(VaultExpansion expansion) {
         super(expansion);
+        setup();
     }
 
     private @NotNull String[] getPlayerGroups(@NotNull final OfflinePlayer player) {
@@ -71,9 +72,13 @@ public class PermissionHook extends VaultHook {
     }
 
     @Override
-    public boolean setup() {
+    public void setup() {
         permission = getService(Permission.class);
         chat = getService(Chat.class);
+    }
+
+    @Override
+    public boolean isReady() {
         return permission != null && chat != null;
     }
 

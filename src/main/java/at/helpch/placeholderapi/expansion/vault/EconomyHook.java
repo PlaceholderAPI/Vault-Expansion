@@ -31,6 +31,7 @@ public class EconomyHook extends VaultHook {
         suffixes.put(1_000_000_000L, expansion.getString("formatting.billions", "B"));
         suffixes.put(1_000_000_000_000L, expansion.getString("formatting.trillions", "T"));
         suffixes.put(1_000_000_000_000_000L, expansion.getString("formatting.quadrillions", "Q"));
+        setup();
     }
 
     private double getBalance(@NotNull final OfflinePlayer player) {
@@ -81,8 +82,13 @@ public class EconomyHook extends VaultHook {
     }
 
     @Override
-    public boolean setup() {
-        return (economy = getService(Economy.class)) != null;
+    public void setup() {
+        economy = getService(Economy.class);
+    }
+
+    @Override
+    public boolean isReady() {
+        return economy != null;
     }
 
     @SuppressWarnings("UnstableApiUsage")

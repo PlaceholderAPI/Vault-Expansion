@@ -24,7 +24,9 @@ public abstract class VaultHook {
         return rsp.getProvider();
     }
 
-    public abstract boolean setup();
+    protected abstract void setup();
+
+    public abstract boolean isReady();
 
     public abstract @Nullable String onRequest(@Nullable OfflinePlayer offlinePlayer, @NotNull String params);
 
