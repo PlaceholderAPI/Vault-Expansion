@@ -11,17 +11,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class EconomyHook extends VaultHook {
 
     private static final Pattern BALANCE_DECIMAL_POINTS_PATTERN = Pattern.compile("balance_(?<points>\\d+)dp");
-    private static final DecimalFormat COMMAS_FORMAT = new DecimalFormat("#,###");
+    private static final String DEFAULT_COMMAS_FORMAT = "#,###";
     private static final DecimalFormat FIXED_FORMAT = new DecimalFormat("#");
     private static final Map<Integer, DecimalFormat> DECIMAL_FORMATS_CACHE = new HashMap<>();
 
     private final NavigableMap<Long, String> suffixes = new TreeMap<>();
+    private final String commasPrefix;
+    private final DecimalFormat commasFormat;
+    private final String commasSuffix;
     private Economy economy;
 
     public EconomyHook(VaultExpansion expansion) {
@@ -31,6 +35,19 @@ public class EconomyHook extends VaultHook {
         suffixes.put(1_000_000_000L, expansion.getString("formatting.billions", "B"));
         suffixes.put(1_000_000_000_000L, expansion.getString("formatting.trillions", "T"));
         suffixes.put(1_000_000_000_000_000L, expansion.getString("formatting.quadrillions", "Q"));
+        commasPrefix = expansion.getString("commas.prefix", "");
+        commasSuffix = expansion.getString("commas.suffix", "");
+
+        DecimalFormat commasFormat;
+
+        try {
+            commasFormat = new DecimalFormat(expansion.getString("commas.format", DEFAULT_COMMAS_FORMAT));
+        } catch (IllegalArgumentException e) {
+            expansion.getPlaceholderAPI().getLogger().log(Level.SEVERE, '[' + expansion.getName() + "] Invalid value for 'commas.format'. " + e.getMessage(), e);
+            commasFormat = new DecimalFormat(DEFAULT_COMMAS_FORMAT);
+        }
+
+        this.commasFormat = commasFormat;
         setup();
     }
 
@@ -122,7 +139,7 @@ public class EconomyHook extends VaultHook {
             case "balance_formatted":
                 return formatBalance((long) balance);
             case "balance_commas":
-                return COMMAS_FORMAT.format(balance);
+                return commasPrefix + commasFormat.format(balance) + commasSuffix;
             default:
                 return null;
         }

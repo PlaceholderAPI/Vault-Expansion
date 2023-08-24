@@ -44,6 +44,9 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
     @Override
     public Map<String, Object> getDefaults() {
         return ImmutableMap.<String, Object>builder()
+                .put("commas.prefix", "")
+                .put("commas.format", "#,###.00")
+                .put("commas.suffix", "")
                 .put("formatting.thousands", "k")
                 .put("formatting.millions", "M")
                 .put("formatting.billions", "B")
