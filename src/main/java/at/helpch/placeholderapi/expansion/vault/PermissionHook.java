@@ -100,7 +100,7 @@ public class PermissionHook extends VaultHook {
             return getGroupMeta(player, index, parts[0].contains("prefix"));
         }
 
-        if (params.equals("hasgroup_")) {
+        if (params.startsWith("hasgroup_")) {
             final String group = params.replace("hasgroup_", "");
             return bool(permission.playerInGroup(null, player, group));
         }
