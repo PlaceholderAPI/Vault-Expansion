@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PermissionHook extends VaultHook {
@@ -27,40 +28,41 @@ public class PermissionHook extends VaultHook {
         return (groups == null) ? new String[0] : groups;
     }
 
-    private @NotNull String getPrimaryGroup(@NotNull final OfflinePlayer player) {
-        return valueOrEmpty(permission.getPrimaryGroup(null, player));
+    private @NotNull Optional<String> getPrimaryGroup(@NotNull final OfflinePlayer player) {
+        return Optional.ofNullable(permission.getPrimaryGroup(null, player));
     }
 
-    private @NotNull String getGroupMeta(@NotNull final String group, final boolean prefix) {
-        final String meta = prefix ? chat.getGroupPrefix((World) null, group) : chat.getGroupSuffix((World) null, group);
-        return valueOrEmpty(meta);
+    private @NotNull Optional<String> getGroupMeta(@NotNull final String group, final boolean isPrefix) {
+        // No need to look up the meta if the group doesn't exist
+        if (group.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final String meta = isPrefix ? chat.getGroupPrefix((World) null, group) : chat.getGroupSuffix((World) null, group);
+        return Optional.ofNullable(meta);
     }
 
-    private @NotNull String getPlayerMeta(@NotNull final OfflinePlayer player, final boolean prefix) {
-        final String meta = prefix ? chat.getPlayerPrefix(null, player) : chat.getPlayerSuffix(null, player);
-        return valueOrEmpty(meta);
+    private @NotNull Optional<String> getPlayerMeta(@NotNull final OfflinePlayer player, final boolean isPrefix) {
+        final String meta = isPrefix ? chat.getPlayerPrefix(null, player) : chat.getPlayerSuffix(null, player);
+        return Optional.ofNullable(meta);
     }
 
-    private @NotNull String getGroupMeta(@NotNull final OfflinePlayer player, final int n, final boolean prefix) {
+    private @NotNull String getGroupMeta(@NotNull final OfflinePlayer player, final int startIndex, final boolean isPrefix) {
         final String[] groups = getPlayerGroups(player);
 
-        if (n > groups.length) {
+        if (startIndex > groups.length) {
             return "";
         }
 
-        for (int i = n - 1; i < groups.length; i++) {
-            final String meta = prefix ? chat.getGroupPrefix((World) null, groups[i]) : chat.getGroupSuffix((World) null, groups[i]);
+        for (int i = startIndex - 1; i < groups.length; i++) {
+            final Optional<String> meta = getGroupMeta(groups[i], isPrefix);
 
-            if (meta != null) {
-                return meta;
+            if (meta.isPresent()) {
+                return meta.get();
             }
         }
 
         return "";
-    }
-
-    private @NotNull String valueOrEmpty(@Nullable final String string) {
-        return (string == null) ? "" : string;
     }
 
     private @NotNull String capitalize(@NotNull final String string) {
@@ -82,7 +84,7 @@ public class PermissionHook extends VaultHook {
         return permission != null && chat != null;
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
+    @SuppressWarnings({"SpellCheckingInspection", "UnstableApiUsage"})
     @Override
     public @Nullable String onRequest(@Nullable OfflinePlayer player, @NotNull String params) {
         if (player == null) {
@@ -100,23 +102,28 @@ public class PermissionHook extends VaultHook {
             return getGroupMeta(player, index, parts[0].contains("prefix"));
         }
 
-        if (params.equals("hasgroup_")) {
-            final String group = params.replace("hasgroup_", "");
+        if (params.startsWith("hasgroup_")) {
+            final String group = params.substring("hasgroup_".length());
             return bool(permission.playerInGroup(null, player, group));
         }
 
         if (params.startsWith("inprimarygroup_")) {
-            final String group = params.replace("inprimarygroup_", "");
-            return bool(getPrimaryGroup(player).equals(group));
+            final String group = params.substring("inprimarygroup_".length());
+            return getPrimaryGroup(player)
+                .map(group::equals)
+                .map(this::bool)
+                .orElseGet(() -> bool(false));
         }
 
         switch (params) {
             case "group":
             case "rank":
-                return getPrimaryGroup(player);
+                return getPrimaryGroup(player).orElse("");
             case "group_capital":
             case "rank_capital":
-                return capitalize(getPrimaryGroup(player));
+                return getPrimaryGroup(player)
+                    .map(this::capitalize)
+                    .orElse("");
 
             case "groups":
             case "ranks":
@@ -124,20 +131,24 @@ public class PermissionHook extends VaultHook {
             case "groups_capital":
             case "ranks_capital":
                 return Arrays.stream(getPlayerGroups(player))
-                        .map(this::capitalize)
-                        .collect(Collectors.joining(", "));
+                    .map(this::capitalize)
+                    .collect(Collectors.joining(", "));
 
             case "prefix":
-                return getPlayerMeta(player, true);
+                return getPlayerMeta(player, true).orElse("");
             case "suffix":
-                return getPlayerMeta(player, false);
+                return getPlayerMeta(player, false).orElse("");
 
             case "groupprefix":
             case "rankprefix":
-                return getGroupMeta(getPrimaryGroup(player), true);
+                return getPrimaryGroup(player)
+                    .map(primaryGroup -> getGroupMeta(primaryGroup, true).orElse(""))
+                    .orElse("");
             case "groupsuffix":
             case "ranksuffix":
-                return getGroupMeta(getPrimaryGroup(player), false);
+                return getPrimaryGroup(player)
+                    .map(primaryGroup -> getGroupMeta(primaryGroup, false).orElse(""))
+                    .orElse("");
 
             default:
                 return null;

@@ -6,6 +6,8 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
+
 public abstract class VaultHook {
 
     protected final VaultExpansion expansion;
@@ -14,14 +16,10 @@ public abstract class VaultHook {
         this.expansion = expansion;
     }
 
-    protected final <T> T getService(final Class<T> cls) {
-        final RegisteredServiceProvider<T> rsp = Bukkit.getServer().getServicesManager().getRegistration(cls);
-
-        if (rsp == null) {
-            return null;
-        }
-
-        return rsp.getProvider();
+    protected final <T> @Nullable T getService(final Class<T> cls) {
+        return Optional.ofNullable(Bukkit.getServer().getServicesManager().getRegistration(cls))
+            .map(RegisteredServiceProvider::getProvider)
+            .orElse(null);
     }
 
     protected abstract void setup();
