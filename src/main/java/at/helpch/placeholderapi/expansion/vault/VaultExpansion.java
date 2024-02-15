@@ -27,7 +27,7 @@ public class VaultExpansion extends PlaceholderExpansion implements Cacheable, C
 
     @Override
     public @NotNull String getVersion() {
-        return "1.8.2";
+        return "1.8.3";
     }
 
     @Override
