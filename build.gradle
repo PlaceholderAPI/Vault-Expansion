@@ -29,6 +29,11 @@ dependencies {
     compileOnly 'com.github.MilkBowl:VaultAPI:1.7'
 }
 
+compileJava {
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
+}
+
 shadowJar {
     archiveName("Expansion-Vault-${project.version}.jar")
 }
