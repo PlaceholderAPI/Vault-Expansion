@@ -34,6 +34,9 @@ public class EconomyHook extends VaultHook {
         suffixes.put(IntegerUtil.getBigInteger("1_000_000_000"), expansion.getString("formatting.billions", "B"));
         suffixes.put(IntegerUtil.getBigInteger("1_000_000_000_000"), expansion.getString("formatting.trillions", "T"));
         suffixes.put(IntegerUtil.getBigInteger("1_000_000_000_000_000"), expansion.getString("formatting.quadrillions", "Q"));
+        suffixes.put(IntegerUtil.getBigInteger("1_000_000_000_000_000_000"), expansion.getString("formatting.quintillion", "Qi"));
+        suffixes.put(IntegerUtil.getBigInteger("1_000_000_000_000_000_000_000"), expansion.getString("formatting.sextillion", "Sx"));
+        suffixes.put(IntegerUtil.getBigInteger("1_000_000_000_000_000_000_000_000"), expansion.getString("formatting.septillion", "Sp"));
         setup();
     }
 
