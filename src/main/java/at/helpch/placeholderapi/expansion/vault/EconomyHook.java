@@ -6,6 +6,9 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,21 +24,21 @@ public class EconomyHook extends VaultHook {
     private static final DecimalFormat FIXED_FORMAT = new DecimalFormat("#");
     private static final Map<Integer, DecimalFormat> DECIMAL_FORMATS_CACHE = new HashMap<>();
 
-    private final NavigableMap<Long, String> suffixes = new TreeMap<>();
+    private final NavigableMap<BigInteger, String> suffixes = new TreeMap<>();
     private Economy economy;
 
     public EconomyHook(VaultExpansion expansion) {
         super(expansion);
-        suffixes.put(1_000L, expansion.getString("formatting.thousands", "K"));
-        suffixes.put(1_000_000L, expansion.getString("formatting.millions", "M"));
-        suffixes.put(1_000_000_000L, expansion.getString("formatting.billions", "B"));
-        suffixes.put(1_000_000_000_000L, expansion.getString("formatting.trillions", "T"));
-        suffixes.put(1_000_000_000_000_000L, expansion.getString("formatting.quadrillions", "Q"));
+        suffixes.put(IntegerUtil.getBigInteger("1_000"), expansion.getString("formatting.thousands", "K"));
+        suffixes.put(IntegerUtil.getBigInteger("1_000_000"), expansion.getString("formatting.millions", "M"));
+        suffixes.put(IntegerUtil.getBigInteger("1_000_000_000"), expansion.getString("formatting.billions", "B"));
+        suffixes.put(IntegerUtil.getBigInteger("1_000_000_000_000"), expansion.getString("formatting.trillions", "T"));
+        suffixes.put(IntegerUtil.getBigInteger("1_000_000_000_000_000"), expansion.getString("formatting.quadrillions", "Q"));
         setup();
     }
 
-    private double getBalance(@NotNull final OfflinePlayer player) {
-        return economy.getBalance(player);
+    private BigDecimal getBalance(@NotNull final OfflinePlayer player) {
+        return IntegerUtil.getBigDecimal(economy.getBalance(player));
     }
 
     private @NotNull String setDecimalPoints(double balance, int points) {
@@ -59,26 +62,24 @@ public class EconomyHook extends VaultHook {
      * @return balance formatted
      * @author <a href="https://stackoverflow.com/users/829571/assylias">assylias</a> (<a href="https://stackoverflow.com/a/30661479/11496439">source</a>)
      */
-    private @NotNull String formatBalance(long balance) {
-        //Long.MIN_VALUE == -Long.MIN_VALUE, so we need an adjustment here
-        if (balance == Long.MIN_VALUE) {
-            return formatBalance(Long.MIN_VALUE + 1);
-        }
-        if (balance < 0) {
-            return "-" + formatBalance(-balance);
+    private @NotNull String formatBalance(BigDecimal balance) {
+        if (balance.compareTo(BigDecimal.ZERO) == 0) {
+            return "0";
         }
 
-        if (balance < 1000) {
-            return Long.toString(balance); //deal with easy case
+        BigInteger intPart = new BigInteger(balance.toPlainString().split("\\.")[0]);
+        Map.Entry<BigInteger, String> e = suffixes.floorEntry(intPart);
+
+        if (e == null) {
+            return balance.stripTrailingZeros().toPlainString();
         }
 
-        final Map.Entry<Long, String> e = suffixes.floorEntry(balance);
-        final Long divideBy = e.getKey();
-        final String suffix = e.getValue();
+        BigDecimal divideBy = new BigDecimal(e.getKey());
+        String suffix = e.getValue();
 
-        long truncated = balance / (divideBy / 10); //the number part of the output times 10
-        boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);
-        return hasDecimal ? (truncated / 10d) + suffix : (truncated / 10) + suffix;
+        BigDecimal result = balance.divide(divideBy, 3, RoundingMode.DOWN).stripTrailingZeros();
+
+        return result.toPlainString() + suffix;
     }
 
     @Override
@@ -98,7 +99,7 @@ public class EconomyHook extends VaultHook {
             return "";
         }
 
-        final double balance = getBalance(offlinePlayer);
+        final BigDecimal balance = getBalance(offlinePlayer);
 
         if (params.startsWith("balance_")) {
             final Matcher matcher = BALANCE_DECIMAL_POINTS_PATTERN.matcher(params);
@@ -110,17 +111,18 @@ public class EconomyHook extends VaultHook {
                     return matcher.group("points") + " is not a valid number";
                 }
 
-                return setDecimalPoints(balance, points);
+                return setDecimalPoints(balance.doubleValue(), points);
             }
         }
 
         switch (params) {
             case "balance":
-                return setDecimalPoints(balance, Math.max(2, economy.fractionalDigits()));
+                return setDecimalPoints(balance.doubleValue(), Math.max(2, economy.fractionalDigits()));
             case "balance_fixed":
                 return FIXED_FORMAT.format(balance);
-            case "balance_formatted":
-                return formatBalance((long) balance);
+            case "balance_formatted": {
+                return formatBalance(balance);
+            }
             case "balance_commas":
                 return COMMAS_FORMAT.format(balance);
             default:
