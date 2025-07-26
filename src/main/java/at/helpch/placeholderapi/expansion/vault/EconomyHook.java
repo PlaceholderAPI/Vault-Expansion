@@ -76,9 +76,15 @@ public class EconomyHook extends VaultHook {
         final Long divideBy = e.getKey();
         final String suffix = e.getValue();
 
+        if (divideBy == null || divideBy <= 0) {
+            return Long.toString(balance); //no suffix found, return as is
+        }
+
         long truncated = balance / (divideBy / 10); //the number part of the output times 10
-        boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);
-        return hasDecimal ? (truncated / 10d) + suffix : (truncated / 10) + suffix;
+        long decimal = truncated % 10;
+        truncated /= 10; //remove the decimal part
+
+        return decimal == 0 ? truncated + suffix : truncated + "." + decimal + suffix;
     }
 
     @Override
